@@ -1,0 +1,17 @@
+
+import './App.css'
+import Homepage from './components/Homepage'
+import Navbar from './components/Navbar'
+
+function App() {
+
+  return (
+    <>
+    <Navbar/>
+    <Homepage/>
+    {/* <Upload/> */}
+    </>
+  )
+}
+
+export default App

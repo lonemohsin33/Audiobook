@@ -1,0 +1,9 @@
+ sudo docker exec jitsi-meet-torture-torture-1  ./scripts/malleus.sh --conferences=1 --participants=5 --senders=3 --audio-senders=2 --duration=60 --room-name-prefix= --hub-url=http://hub:4444/wd/hub --instance-url=https://dcefuturenoti.nyalazone.ai/test
+ 
+ 
+ 
+ ./scripts/malleus.sh --conferences=1 --participants=2 --senders=2 --audio-senders=2 --duration=300 --room-name-prefix=test --hub-url=http://hub:4444/wd/hub --instance-url=https://dcefuturenoti.nyalazone.ai
+
+
+
+
