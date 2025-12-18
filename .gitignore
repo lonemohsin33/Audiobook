@@ -22,4 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-server/uploads
+/server/uploads/
+/server/cache/
+/ai_server/venv/
+/ai_server/*.egg-info
+/ai_server/__pycache__/
+/ai_server/.idea/

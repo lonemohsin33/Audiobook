@@ -3,61 +3,47 @@ import Busboy from 'busboy'; // ✅ will work in older versions
 import path from 'path';
 import { initialize } from "./ContentController.js";
 import {setContentList} from "../store.js"
+import axios from "axios";
+import FormData from "form-data";
 
 let global_content_list = [];
 
 export const upload_file_and_create_cache = (req, res)=>{
-    const busboy = new Busboy({ headers: req.headers });
-    let responded = false;
-    const pages_data = []
-    let total_pages = 0
+    const busboy = Busboy({ headers: req.headers });
+    let call_to_ai;
 
-    busboy.on('file', async (fieldname, file, filename, encoding, mimetype) => {
-        
-        console.log(mimetype)
-        console.log(encoding)
-        console.log(fieldname)
+    busboy.on('file', (fieldname, file, filename, encoding, mimetype) => {
+        console.log(`File [${fieldname}]: filename: ${filename}, encoding: ${encoding}, mimetype: ${mimetype}`);
 
-        console.log(`📥 Receiving file: ${filename}`);
-        const saveTo = path.join('uploads', filename);
-        if (fs.existsSync(saveTo)){
-                const parsed = path.parse(filename);
-            
-                // Remove `.pdf`, keep `bioauth.drawio`
-                const jsonFilename = `${parsed.name}.json`;
-            const cachePath = path.join('cache', jsonFilename)
-            
-            let pages_data = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-            setContentList(pages_data)
-            total_pages = pages_data.length
-            pages_data = pages_data[0].length>0?pages_data[0]:pages_data[1]
-            responded = true
-            file.resume()
-            return res.status(200).json({
-                "msg": "File Already Uploaded", 
-                pages_data: pages_data,
-                total_pages:total_pages
-            })
-        }
-        const writeStream = fs.createWriteStream(saveTo);
+        const form = new FormData();
 
-        file.pipe(writeStream);
+        form.append('file', file, { filename: filename, contentType: mimetype  });
 
-        file.on('end', async () => {
-            pages_data, total_pages = await initialize(saveTo, filename, mimetype)
-            setContentList(pages_data)
-
-            console.log('✅ File upload complete:', filename);
+        call_to_ai = axios.post('http://localhost:5000/file/convert', form, {
+            headers: {
+                ...form.getHeaders()
+            },
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity
         });
     });
 
-    busboy.on('finish', () => {
-    if (!responded) {
-      res.status(200).json({ message: 'Upload complete' , pages_data: pages_data, total_pages:total_pages});
-    }
+    busboy.on('finish', async () => {
+        console.log('Upload finished');
+        try {
+            const ai_response = await call_to_ai;
+            // console.log('Response from AI service:', ai_response.data);
+            // const content_list = ai_response.data['content_list'];
+            setContentList(ai_response.data.data);
+            // await initialize(); // Re-initialize with new content
+            res.status(200).json({ message: 'File uploaded and cache created successfully', data: ai_response.data.data });
+        } catch (error) {
+            console.error('Error processing file with AI service:', error);
+            res.status(500).json({ message: 'Error processing file' });
+        }
     });
 
-    req.pipe(busboy);
+    req.pipe(busboy);   
 
 
 }

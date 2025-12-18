@@ -30,9 +30,10 @@ const Upload: React.FC<Props> = ({setPageData, setTotalPages}) => {
             console.log(selectedFile)
             axios.post("http://localhost:3000/file/upload", data).then((res)=>{
                 console.log(res)
+                localStorage.setItem("data", JSON.stringify(res.data.data))
                 if(res.status == 200 || res.status == 409){
-                    setPageData(res.data.pages_data)
-                    setTotalPages(res.data.total_pages)
+                    setPageData(res.data.data.pages)
+                    setTotalPages(res.data.data.total_pages)
                 }
             }).catch((err)=>{
                 console.log(err)

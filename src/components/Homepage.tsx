@@ -8,7 +8,7 @@ import AudioControls from './AudioControls'
 
 
 const Homepage = () => {
-    let [pageData, setpageData] = useState<string | null>(null)
+const [pageData, setpageData] = useState<any[] | null>(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0)
     const [isAudioLoading, setIsAudioLoading] = useState(false);
@@ -19,35 +19,39 @@ const Homepage = () => {
 
 
 
-  const nextPage = (curr_page: number)=>{
-    axios.get(`http://localhost:3000/page/${curr_page+1}`).then((res)=>{
-      setpageData(res.data.pages_data)
-      setPage(curr_page+1)
-      if (audioRef.current){
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    }).catch((err)=>{
-      console.log(err)
-    })
-    console.log(curr_page)
 
-  }
 
-  const prevPage = (curr_page:number)=>{
-    console.log(curr_page)
-      axios.get(`http://localhost:3000/page/${curr_page-1}`).then((res)=>{
-      setpageData(res.data.pages_data)
-      setPage(curr_page-1)
-      if (audioRef.current){
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    }).catch((err)=>{
-      console.log(err)
-    })
-    console.log(curr_page)
+ const nextPage = () => {
+  console.log(page, totalPages);
+  if (page >= totalPages) return;
+
+  setPage(prev => prev + 1);
+  setpageData(JSON.parse(localStorage.getItem("data") || "[]"));
+
+  audioRef.current?.pause();
+  setIsPlaying(false);
+};
+
+const prevPage = () => {
+  if (page <= 1) return;
+
+  setPage(prev => prev - 1);
+  setpageData(JSON.parse(localStorage.getItem("data") || "[]"));
+
+  audioRef.current?.pause();
+  setIsPlaying(false);
+};
+
+
+
+  useEffect(() => {
+  const stored = localStorage.getItem("data");
+  if (stored && pageData === null) {
+    setpageData(JSON.parse(stored));
+    setTotalPages(Number(JSON.parse(stored).total_pages || 0));
   }
+}, [pageData, totalPages]);
+
 
 
   // Cleanup on unmount
@@ -60,31 +64,35 @@ const Homepage = () => {
     };
   }, []);
 
+  
+
 
 
 
 
   return (
     <>
-      <div className="flex flex-col items-center mt-6">
-        {pageData && <AudioControls page={page} />}
+<div className="flex flex-col items-center mt-6">
+  {pageData && <AudioControls page={page} />}
 
-        {!pageData ? (
-          <div>
-            <h3 className="text-3xl text-center mb-4">
-              Make your own Audiobook<br />Upload a PDF and listen.
-            </h3>
-            <Upload setPageData={setpageData} setTotalPages={setTotalPages}/>
-          </div>
-        ) : (
-          <Content data={pageData}  
-           page={page}
-           totalPages={totalPages}
-           onNext={() => nextPage(page)}
-           onPrev={() => prevPage(page)} />
-        )}
-        
-      </div>
+  {pageData === null ? (
+    <div>
+      <h3 className="text-3xl text-center mb-4">
+        Make your own Audiobook<br />Upload a PDF and listen.
+      </h3>
+      <Upload setPageData={setpageData} setTotalPages={setTotalPages} />
+    </div>
+  ) : (
+    <Content
+      data={pageData}
+      page={page}
+      totalPages={totalPages}
+      onNext={nextPage}
+      onPrev={prevPage}
+    />
+  )}
+</div>
+
 
     </>
   )
