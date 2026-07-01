@@ -53,7 +53,7 @@ return (
           );
         })} */}
         {
-          languages.map((lang: string, index: number) => {
+          languages.map((lang: string) => {
             return resolvedData[lang].map((_: any, idx:number) => {
               return (
                 <div

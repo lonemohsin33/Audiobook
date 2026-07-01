@@ -1,5 +1,4 @@
 import { FaGithub, FaLinkedin, FaEnvelope, FaPodcast } from 'react-icons/fa';
-import { href } from 'react-router-dom';
 
 const SOCIALS = [
   { href: 'https://github.com/lonemohsin33', icon: FaGithub, label: 'GitHub' },
