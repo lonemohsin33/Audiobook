@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Document {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar
+  total_pages   Int?
+  user_id       Int?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  updated_at    DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  file_path     String?
+  upload_status String?   @db.VarChar(50)
+
+  @@map("documents")
+}
+
+model DocumentPage {
+  id          Int       @id @default(autoincrement())
+  document_id Int
+  page_number Int
+  content     String
+  language    String?   @db.VarChar(10)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+
+  @@unique([document_id, page_number], map: "unique_document_page")
+  @@map("document_pages")
+}
+
+model subscriptions {
+  id                   Int     @id @default(autoincrement())
+  name                 String  @db.VarChar
+  subscription_content Json
+  users                users[]
+}
+
+model users {
+  id              Int            @id @default(autoincrement())
+  name            String?        @db.VarChar
+  email           String         @unique @db.VarChar
+  phone           String?        @db.VarChar
+  password        String         @db.VarChar
+  subscription_id Int?
+  subscriptions   subscriptions? @relation(fields: [subscription_id], references: [id], onUpdate: NoAction, map: "fk_users_subscription")
+}

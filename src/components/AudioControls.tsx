@@ -1,114 +1,110 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaVolumeUp, FaPause, FaPlay, FaStop } from 'react-icons/fa';
 import { HiSpeakerWave } from 'react-icons/hi2';
+import { getBookAudioUrl } from '../services/api';
 
-const AudioControls = ({ page }: { page: number }) => {
+const BASE_URL = 'http://localhost:3000';
+
+type Props = {
+  page: number;
+  bookId?: string;
+};
+
+const AudioControls = ({ page, bookId }: Props) => {
   const [isAudioLoading, setIsAudioLoading] = useState(false);
   const [audioError, setAudioError] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeButton, setActiveButton] = useState<'stop' | 'pause-play' | null>(null);
-
+  const [hasAudio, setHasAudio] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const loadAndPlay = () => {
+  useEffect(() => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setIsPlaying(false);
+    setHasAudio(false);
+    setAudioError('');
+  }, [page, bookId]);
+
+  const audioUrl = bookId
+    ? getBookAudioUrl(bookId, page)
+    : `${BASE_URL}/page/audio/${page}`;
+
+  const loadAndPlay = async () => {
     setIsAudioLoading(true);
     setAudioError('');
 
-    const audio = new Audio(`http://localhost:3000/page/audio/${page}`);
+    try {
+      const response = await fetch(audioUrl);
+      if (!response.ok) throw new Error('Audio not available');
+      const blob = await response.blob();
+      const audio = new Audio(URL.createObjectURL(blob));
 
-    audio.addEventListener('canplaythrough', () => {
+      audio.addEventListener('canplaythrough', () => {
+        setIsAudioLoading(false);
+        audio.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => setAudioError('Could not play audio'));
+      });
+
+      audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.load();
+      audioRef.current = audio;
+      setHasAudio(true);
+    } catch {
       setIsAudioLoading(false);
-      audio.play()
-        .then(() => {
-          setIsPlaying(true);
-          setActiveButton('pause-play');
-        })
-        .catch(err => {
-          setAudioError('Could not play audio');
-          console.error(err);
-        });
-    });
-
-    audio.addEventListener('ended', () => setIsPlaying(false));
-    audio.load();
-
-    audioRef.current = audio;
+      setAudioError('Audio not available for this page');
+    }
   };
 
   const togglePlayPause = () => {
     if (!audioRef.current) return;
-
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play()
-        .then(() => setIsPlaying(true))
-        .catch(err => {
-          setAudioError('Could not resume audio');
-          console.error(err);
-        });
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setAudioError('Could not resume audio'));
     }
-
-    setActiveButton('pause-play');
   };
 
   const handleStop = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      setIsPlaying(false);
-      setActiveButton('stop');
-    }
+    if (!audioRef.current) return;
+    audioRef.current.pause();
+    audioRef.current.currentTime = 0;
+    setIsPlaying(false);
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 mt-4">
+    <div className="flex flex-col items-center gap-2 py-2 border-t border-slate-600">
       <button
         onClick={loadAndPlay}
         disabled={isAudioLoading || isPlaying}
-        className={`flex items-center gap-2 text-lg ${isAudioLoading ? 'opacity-50' : 'hover:opacity-80'}`}
+        className="flex items-center gap-2 text-sm text-slate-200 hover:text-white disabled:opacity-50"
       >
         {isAudioLoading ? (
           <>
-            <HiSpeakerWave size={22} className="animate-pulse" />
-            <span>Loading...</span>
+            <HiSpeakerWave size={18} className="animate-pulse" />
+            Loading...
           </>
         ) : (
           <>
-            <FaVolumeUp size={22} />
-            <span>Listen</span>
+            <FaVolumeUp size={18} />
+            Listen
           </>
         )}
       </button>
 
-      {audioRef.current && (
-        <div className="flex gap-3 mt-2">
-          {/* ⏯ Play/Pause Toggle */}
-          <button
-            onClick={togglePlayPause}
-            className={`rounded-full p-2 ${
-              activeButton === 'pause-play' ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            {isPlaying ? <FaPause /> : <FaPlay />}
+      {hasAudio && (
+        <div className="flex gap-2">
+          <button onClick={togglePlayPause} className="rounded-full p-2 bg-slate-600 hover:bg-slate-500 text-white">
+            {isPlaying ? <FaPause size={14} /> : <FaPlay size={14} />}
           </button>
-
-          {/* ⏹ Stop */}
-          <button
-            onClick={handleStop}
-            className={`rounded-full p-2 ${
-              activeButton === 'stop' ? 'bg-blue-500 text-white' : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            <FaStop />
+          <button onClick={handleStop} className="rounded-full p-2 bg-slate-600 hover:bg-slate-500 text-white">
+            <FaStop size={14} />
           </button>
         </div>
       )}
 
-      {audioError && (
-        <p className="text-red-500 text-sm mt-1">{audioError}</p>
-      )}
+      {audioError && <p className="text-red-300 text-xs">{audioError}</p>}
     </div>
   );
 };

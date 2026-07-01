@@ -1,10 +1,12 @@
 from flask import Flask
-import requests
-from pdf_reader_server.routes.routes import file_analyser
+from pdf_reader_server.routes.routes import ai_router
 
-app = Flask(__name__)
-app.register_blueprint(file_analyser)
+
+def create_app():
+    app = Flask(__name__)
+    app.register_blueprint(ai_router)
+    return app
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    create_app().run(debug=True)
