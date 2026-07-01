@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const uploadFile = async (file: File) => {
   const formData = new FormData();
@@ -42,3 +42,6 @@ export const get_book_page = async (id: string, page: number) => {
 
 export const getBookAudioUrl = (id: string, page: number) =>
   `${BASE_URL}/books/${id}/audio/${page}`;
+
+export const getPageAudioUrl = (page: number) =>
+  `${BASE_URL}/page/audio/${page}`;

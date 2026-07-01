@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FaVolumeUp, FaPause, FaPlay, FaStop } from 'react-icons/fa';
 import { HiSpeakerWave } from 'react-icons/hi2';
-import { getBookAudioUrl } from '../services/api';
-
-const BASE_URL = 'http://localhost:3000';
+import { getBookAudioUrl, getPageAudioUrl } from '../services/api';
 
 type Props = {
   page: number;
@@ -25,9 +23,7 @@ const AudioControls = ({ page, bookId }: Props) => {
     setAudioError('');
   }, [page, bookId]);
 
-  const audioUrl = bookId
-    ? getBookAudioUrl(bookId, page)
-    : `${BASE_URL}/page/audio/${page}`;
+  const audioUrl = bookId ? getBookAudioUrl(bookId, page) : getPageAudioUrl(page);
 
   const loadAndPlay = async () => {
     setIsAudioLoading(true);

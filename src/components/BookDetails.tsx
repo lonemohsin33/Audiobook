@@ -115,7 +115,7 @@ const BookDetails = () => {
             <div className="w-full max-w-3xl flex flex-col rounded-xl shadow-2xl border border-slate-300 overflow-hidden">
                 <div className="shrink-0 bg-slate-800 text-white px-6 py-4 text-center">
                     <h1 className="text-xl font-semibold tracking-wide">{book.name}</h1>
-                    <span className="inline-block mt-2 text-xs bg-slate-600 px-3 py-1 rounded-full">
+                    <span className="inline-block mt-2 text-xs bg-slate-600 px-3 py-1 rounded-full mb-2">
                         Page {currentPage} of {totalPages}
                     </span>
                     <AudioControls page={currentPage} bookId={id} />
