@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 
 
 const Upload = () => {
-
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const navigate = useNavigate();
 
     const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const fileList = event.target.files;
@@ -16,18 +16,13 @@ const Upload = () => {
       }
     };
 
-
     const uploadFileFunction = async () => {
       if (!selectedFile) return;
-      const navigate = useNavigate();
 
       try {
         const res = await uploadFile(selectedFile);
-        
-        console.log(res)
-        if (!res.errcode){
-          console.log(res);
-          navigate(`/book/${res.document_id}`);
+        if (!res.errcode) {
+          navigate(`/book/${res.document_id}`, { state: { firstPage: res.data } });
         }
       } catch (err) {
         console.error(err);

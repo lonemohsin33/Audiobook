@@ -45,7 +45,22 @@ export class DocumentsHandler {
         return prisma.document.findMany({ orderBy: { id: 'desc' } });
     }
 
+    async saveFirstPage(documentId, firstPage) {
+        await prisma.documentPage.create({
+            data: {
+                document_id: documentId,
+                page_number: 1,
+                content: JSON.stringify({
+                    content: firstPage.content,
+                    aligned_data: firstPage.aligned_data || [],
+                }),
+                language: firstPage.languages?.length ? firstPage.languages.join(',') : null,
+            },
+        });
+    }
+
     async saveDocumentPages(documentId, data) {
+        await prisma.documentPage.deleteMany({ where: { document_id: documentId } });
         await prisma.documentPage.createMany({
             data: data.pages.map((page) => ({
                 document_id: documentId,
@@ -85,10 +100,8 @@ export class DocumentsHandler {
             console.log(firstPage, "firstpage")
             
             const document = await this.createDocument(fileName, filePath, firstPage.total_pages);
-            console.log(document, "document")
-            
-            
-            
+            await this.saveFirstPage(document.id, firstPage);
+
             this.processDocumentInBackground(document.id, filePath);
             
             return {
